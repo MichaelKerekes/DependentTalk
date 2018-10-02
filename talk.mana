@@ -1,0 +1,1152 @@
+  ------------------------------------------------------------------------------
+  --  Correct and Efficient Code in Mana using Dependent Types and Gadts
+  ------------------------------------------------------------------------------
+
+    Speaker: Michael Kerekes
+
+      author of the Mana language
+
+    plan:
+      - introduction to functional programming in Mana
+      - live code a few examples
+        - length indexed lists
+        - strongly typed AST
+        - printf
+
+    reality:
+      - unfamiliar syntax/concepts
+      - I am not an expert
+      - Mana is a work in progess - there will be bugs
+      - probably wont make it through everything
+      - ask me anything
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  history
+  ------------------------------------------------------------------------------
+
+    - functional programming
+      - 1936 - Lambda Calculus
+      - 1958 - Lisp
+      - 1973 - ML/Hope
+      - 1985 - Miranda
+      - 1990 - Haskell
+      - 20?? - Mana
+
+    - ADTs (discriminated union)
+      - 1970 - Pascal
+
+    - dependent types
+      - 1972 - Intuitionistic type theory - dependent types
+      - 1988 - Calculus of Constructions  - inductive types (Gadts)
+      - 1989 - Coq proof assistant
+      - 2007 - Agda
+      - 2017 - Idris
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  references
+  ------------------------------------------------------------------------------
+
+    - Software Foundations - Online - softwarefoundations.cis.upenn.edu
+    - Type-Driven Development with Idris - Book - Edwin Brady
+    - A tutorial implementation of a dependently typed lambda calculus - Loh Et al
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  understanding dependent types
+  ------------------------------------------------------------------------------
+
+    - kind of like integral calculus
+
+    - stages of understanding
+      1) huh?                    -- unfamiliar concepts/syntax
+      2) I get it                -- derivatives are useful!
+      3) I know how it works     -- wow this is actually fairly simple
+      4) this is really powerful -- quantum mechanics
+      5) I think I am a dummy    -- I don't understand quantum mechantics
+                                 -- or this one line program
+      6) master                  -- I wrote that one line program
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  why Mana?
+  ------------------------------------------------------------------------------
+
+    - why create a new language
+      - I have a lot of ideas I want to try out
+      - learn new stuff
+      - current languages/tools can be improved
+
+    - why not
+      - it is really hard
+      - lots of work
+        - design language
+        - compiler
+        - libraries
+        - tools
+        - interop
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  how to judge a language
+  ------------------------------------------------------------------------------
+
+    - expressiveness
+    - safety/correctness
+    - performance
+    - fulfillment
+      - fun
+      - exciting
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  why Mana vs. language X
+  ------------------------------------------------------------------------------
+
+    - more expressive       (IMO! :D )
+    - correctness           (acceptable)
+    - better performance    (hopefully)
+    - fulfillment
+      - new ways of doing things
+      - great IDE           (someday)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  why types?
+  ------------------------------------------------------------------------------
+
+    - specification
+    - documentation
+    - help you write the code
+      - constrain what you can write
+    - bullet proof testing
+    - performance
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  why dependent types?
+  ------------------------------------------------------------------------------
+
+    - simplifies language
+      - one language to rule them all
+      - types and terms use the same language
+
+    - super-expressive
+
+    - unbounded constraints
+      - statically checked
+      - on code and data
+      - no runtime cost (theoretically)
+
+    - use when needed/wanted
+      - you choose how correct you want to be
+      - you can have no constraints if you want
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  why not dependent types?
+  ------------------------------------------------------------------------------
+
+    - really hard to understand
+
+    - writing generic algorithms over dependent functions
+      can be really hard
+
+    - need to rewrite/duplicate parts of your standard libs to work dependently
+
+    - but, you can use dependent types only where you need them
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  Mana: everything is a Value
+  ------------------------------------------------------------------------------
+
+    -- a program is just a set of named values
+    -- values are immutable
+
+    -- literals
+
+    integer   = 5       : Integer
+    rational  = 1/3     : Rational
+    char      = 'a'     : Char
+    string    = "hello" : String
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  functions are values
+  ------------------------------------------------------------------------------
+
+    double = \(x : Int) -> x + x
+    square = \(x : Int) -> x * x
+    add    = \(x : Int) -> \(y : Int) -> x + y
+
+    -- application
+
+    double 5          -- 10
+    add    3 4        -- 7
+    double (square 3) -- 18
+
+    -- syntactic sugar
+
+    square : Int -> Int
+    square x = x + x
+
+    add : Int -> Int -> Int
+    add x y = x + y
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  traits
+  ------------------------------------------------------------------------------
+
+    -- a set of values/functions a type implements
+
+    trait Zero t where zero : t
+    trait Add  t where (+)  : t -> t -> t
+
+    -- Int
+
+    extern addInt : Int -> Int -> Int
+
+    instance Zero Int where zero = 0
+    instance Zero Int where (+)  = addInt
+
+    -- String
+
+    extern addString : String -> String -> String
+
+    instance Zero String where zero = ""
+    instance Zero String where (+)  = addString
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  trait constraints
+  ------------------------------------------------------------------------------
+
+    trait Zero t where zero : t
+    trait Add  t where (+)  : t -> t -> t
+
+    -- zero is polymorphic in t
+
+    zero : Zero t => t
+
+    -- to call (+) 't' needs to be an instance of Add
+
+    (+)  : Add t => t -> t -> t
+
+    -- traits propagate
+
+    double : Add t => t -> t
+    double x = x + x
+
+    addZero : (Zero t, Add t) -> t -> t
+    addZero x = x + zero
+
+    --  traits let you write generic functions
+
+    sum : (Zero t, Add t) => List t -> t
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  overloaded literals
+  ------------------------------------------------------------------------------
+
+    trait FromInteger  t where fromInteger  : Integer  -> t
+    trait FromRational t where fromRational : Rational -> t
+
+    -- literals are overloaded
+
+    3   : FromInteger  t => t
+    1/3 : FromRational t => t
+
+    --
+
+    3   : Int    -- fromInteger  3
+    1/2 : Double -- fromRational (1/2)
+    0.3 : Float  -- fromRational (3/10)
+
+    square 3     -- square (fromInteger 3)
+
+    -- eventually
+
+    0 : Zero t => t
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  function combinators
+  ------------------------------------------------------------------------------
+
+    -- apply operator
+
+    (<|) f x = f x
+
+    -- composition
+
+    (.) f g = \x -> f (g x)
+
+    --  square followed by double
+
+    doubleSquare : Int -> Int
+    doubleSquare = double . square
+                 = \x -> double (square x)
+
+    -- these are equivalent
+
+    double (square x)
+    double <| square x
+    doubleSquare x
+    (double . square) x
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  currying
+  ------------------------------------------------------------------------------
+
+    add : Int -> (Int -> Int)
+    add = \(x ; Int) -> \(y : Int) -> x + y
+
+    -- application is substitution
+
+    inc = add 1 -- \(y : Int) -> 1 + y
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  types are values
+  ------------------------------------------------------------------------------
+
+    -- typedef
+
+    IntToInt = Int -> Int
+
+    square : IntToInt
+    square x = x * x
+
+    -- types as parameters
+    -- types as results
+
+    endomorphism : Type -> Type
+    endomorphism t = t -> t
+
+    -- types are evaluated at compile time
+
+    square : endomorphism Int -- square : Int -> Int
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  dependent types
+  ------------------------------------------------------------------------------
+
+    -- parametric polymorphism
+
+    id : (a : Type) -> a -> a
+    id = \(a : Type) -> \(x : a) -> x
+
+    -- partial application
+
+    id Int  -- \(x : Int ) -> x
+    id Bool -- \(x : Bool) -> x
+
+    id Int  : Int  -> Int
+    id Bool : Bool -> Bool
+
+    --
+
+    id Int  5    -- 5
+    id Bool True -- True
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  implicit parameters
+  ------------------------------------------------------------------------------
+
+    id : {a : Type} -> a -> a
+    id = \{a : Type} -> \(x : a) -> x
+
+    -- type inference
+
+    id True -- id @Bool True
+
+    -- syntactic sugar
+
+    id : a -> a
+    id x = x
+
+    -- type inference
+
+    id x = x
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  example
+  ------------------------------------------------------------------------------
+
+    -- type 'depends' on the value of the parameter
+
+    chooseType : Bool -> Type
+    chooseType True  = String
+    chooseType False = Int
+
+    -- dependent result type
+
+    returnFive : (b : Bool) -> chooseType b
+    returnFive True  = "Five"
+    returnFive False = 5
+
+    -- dependent parameter type
+
+    comsume : (b : Bool) -> chooseType b -> String
+    consume True  string = string
+    consume False x      = "Int"
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  sprintf
+  ------------------------------------------------------------------------------
+
+    -- type depends on format string
+
+    sprintf     : (s : String) -> sprintfType s
+    sprintfType : String -> Type
+
+    --
+
+    sprintf "hello"       : String
+    sprintf "hello %s"    : String -> String
+    sprintf "hello %d"    : Int    -> String
+    sprintf "hello %s %d" : String -> Int -> String
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  algebraic data types (ADT)
+  ------------------------------------------------------------------------------
+
+    type Bool = False | True
+
+    -- Bool  : Type
+    -- False : Bool
+    -- True  : Bool
+
+    type Maybe a = None | Some a
+
+    -- Maybe : Type -> Type
+    -- None  : {a : Type} -> Maybe a
+    -- Some  : {a : Type} -> a -> Maybe a
+
+    type List a = Nil | Cons a (List a)
+
+    -- List : Type -> Type
+    -- Nil  : {a : Type} -> List a
+    -- Cons : {a : Type} -> a -> List a -> List a
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  values
+  ------------------------------------------------------------------------------
+
+    type Bool    = False | True
+    type Maybe a = None  | Some a
+    type List  a = Nil   | Cons a (List a)
+
+    -- any combination of constructors
+
+    True                 : Bool
+    Some True            : Maybe Bool
+    Cons (Some True) Nil : List (Maybe Bool)
+    Some (Cons True Nil) : Maybe (List Bool)
+    Cons None Nil        : {a : Type} -> List (Maybe a)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  pattern matching
+  ------------------------------------------------------------------------------
+
+    -- case expression
+
+    not : Bool -> Bool
+    not b =
+      case b of
+        False -> True
+        True  -> False
+
+    -- syntaxtic sugar
+
+    not False = True
+    not True  = False
+
+    -- underscore
+
+    or False b = b
+    or True  _ = True
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  coding example: List
+  ------------------------------------------------------------------------------
+
+    -- List/head/map/zipWith
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  Gadts - guarded algebraic data types
+  ------------------------------------------------------------------------------
+
+    -- compact form
+
+    type List a = Nil | Cons a (List a)
+
+    -- write out constructor types explicitly
+
+    type List : Type -> Type where
+      Nil  : {a : Type} ->                List a
+      Cons : {a : Type} -> a -> List a -> List a
+
+    -- infer implicits
+
+    type List : Type -> Type where
+      Nil  :                List a
+      Cons : a -> List a -> List a
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  coding example: Vect
+  ------------------------------------------------------------------------------
+
+    -- Vect/head/map/zipWith
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  proofs
+  ------------------------------------------------------------------------------
+
+    -- equality constraints
+
+    type Equal : {t : Type} -> t -> t -> Type where
+      Reflexive : {t : Type} -> {x : t} -> Equal x x
+
+    -- equality proofs
+
+    intIsInt   = Reflexive : Equal Int  Int
+    trueIsTrue = Reflexive : Equal True True
+
+    -- implicit arguments
+
+    intIsInt   = Reflexive @Type @Int  : Equal @Type Int  Int
+    trueIsTrue = Reflexive @Bool @True : Equal @Bool True True
+
+    -- a little more interesting
+
+    proofInt = Reflexive @Int : Equal (2 + 2) 4
+
+    -- S (S (S (S Z))) == S (S (S (S Z)))
+
+    proofNat = Reflexive @Nat : Equal (2 + 2) 4
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  nicer syntax
+  ------------------------------------------------------------------------------
+
+    type (=) : (a : t) -> (a : t) -> Type where
+      Reflexive : x = x
+
+    proof = Reflexive @Int : (2 + 2) = 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  unit tests
+  ------------------------------------------------------------------------------
+
+    test0 = Reflexive : square 5  = 25
+    test1 = Reflexive : square -5 = 25
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  proof: transitivity of equality
+  ------------------------------------------------------------------------------
+
+    -- curry-howard correspondence
+    --  types     = propositions
+    --  values    = proofs
+    --  functions = implications
+
+    -- (x = y && y = z) => x = z
+    -- x = y => y = z => x = z
+
+    equalityIsTransitive : (x = y) -> (y = z) -> (x = z)
+    equalityIsTransitive eqXY eqYZ = Reflexive
+
+    -- implicit parameters
+
+    equalityIsTransitive : {_ : x = y} -> {_ : y = z} -> x = z
+    equalityIsTransitive = Reflexive
+
+    -- constraint syntax
+
+    equalityIsTransitive : x = y => y = z => x = z
+    equalityIsTransitive = Reflexive
+
+    -- or
+
+    equalityIsTransitive : (x = y, y = z) => x = z
+    equalityIsTransitive = Reflexive
+
+
+
+  ------------------------------------------------------------------------------
+  --  limits of type inference
+  ------------------------------------------------------------------------------
+
+    -- no magic
+    -- only exact matches
+    -- error (S n) != (n + 1)
+
+    addNatNIsCommutative : (n : Nat) -> (1 + n) = (n + 1)
+    addNatNIsCommutative n = Reflexive
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  associativity of (+)
+  ------------------------------------------------------------------------------
+
+    -- prove (+) is associative to be an instance of the Monoid trait
+
+    trait (Zero t, Add t) => Monoid t where
+      addIsAssociative : x + (y + z) = (x + y) + z
+
+    -- proofs are hard!
+
+    instance Monoid Int where
+      addIsAssociative = ...
+
+    instance Monoid Nat where
+      addIsAssociative = ...
+
+    -- can safely write parallel sum
+
+    parallelSum : Monoid t => List t -> t
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  coding example: E a
+  ------------------------------------------------------------------------------
+
+    -- e0 - e3.mana
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ------------------------------------------------------------------------------
+  --  coding example: printf
+  ------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

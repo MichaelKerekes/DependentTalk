@@ -1,0 +1,49 @@
+------------------------------------------------------------------------------
+--
+--  Vect
+--
+------------------------------------------------------------------------------
+
+namespace Vect
+
+  import Primitive
+
+  ------------------------------------------------------------------------------
+  --  Nat
+  ------------------------------------------------------------------------------
+
+  type Nat = Z | S Nat
+
+  addNat : Nat -> Nat -> Nat
+  addNat Z     m = m
+  addNat (S n) m = S (addNat n m)
+
+  ------------------------------------------------------------------------------
+  --  Vect
+  ------------------------------------------------------------------------------
+
+  type Vect : Nat -> Type -> Type where
+    VNil  :                               Vect Z     a
+    VCons : (x : a) -> (xs : Vect n a) -> Vect (S n) a
+
+  head : Vect (S n) a -> a
+  head (VCons x xs) = x
+
+  map : (a -> b) -> Vect n a -> Vect n b
+  map f (VNil      ) = VNil
+  map f (VCons x xs) = VCons (f x) (map f xs)
+
+  zipWith : (a -> b -> c) -> Vect n a -> Vect n b -> Vect n c
+  zipWith f (VNil      ) (VNil      ) = VNil
+  zipWith f (VCons x xs) (VCons y ys) = VCons (f x y) (zipWith f xs ys)
+
+  ------------------------------------------------------------------------------
+  --
+  ------------------------------------------------------------------------------
+
+  vs = [ 3, 4, 5 ]
+
+  main = do
+    print vs
+    print <| map square vs
+    print <| zipWith (+) [3, 5] [1, 2]

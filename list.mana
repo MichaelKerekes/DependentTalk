@@ -1,0 +1,41 @@
+------------------------------------------------------------------------------
+--
+--  List
+--
+------------------------------------------------------------------------------
+
+namespace List
+
+  import Primitive
+
+  ------------------------------------------------------------------------------
+  --  List
+  ------------------------------------------------------------------------------
+
+  type List a = Nil | Cons a (List a)
+
+  head : List a -> Maybe a
+  head (Nil      ) = None
+  head (Cons x xs) = Some x
+
+  map : (a -> b) -> List a -> List b
+  map f (Nil      ) = Nil
+  map f (Cons x xs) = Cons (f x) (map f xs)
+
+  zipWith : (a -> b -> c) -> List a -> List b -> List c
+  zipWith f (Cons x xs) (Cons y ys) = Cons (f x y) (zipWith f xs ys)
+  zipWith f _           _           = Nil
+
+  ------------------------------------------------------------------------------
+  --  main
+  ------------------------------------------------------------------------------
+
+  xs : List Int
+  xs = Cons 3 (Cons 5 Nil)
+
+  main = do
+    print <| xs
+    print <| head (Nil : List Bool)
+    print <| head xs
+    print <| map square xs
+    print <| zipWith (+) xs (map square xs)

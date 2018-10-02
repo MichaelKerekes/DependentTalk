@@ -1,0 +1,52 @@
+------------------------------------------------------------------------------
+--
+--  Integer/Bool Expression Gadt
+--
+------------------------------------------------------------------------------
+
+namespace E2
+
+  import Core
+
+  ------------------------------------------------------------------------------
+  --  E - expressions
+  ------------------------------------------------------------------------------
+
+  type E : Type -> Type where
+    EInt   : Int             -> E Int
+    EBool  : Bool            -> E Bool
+    ENot   : E Bool          -> E Bool
+    EAdd   : E Int  -> E Int -> E Int
+    EMul   : E Int  -> E Int -> E Int
+    EEqual : E Int  -> E Int -> E Bool
+
+  ------------------------------------------------------------------------------
+  --
+  ------------------------------------------------------------------------------
+
+  instance FromInteger (E Int) where fromInteger = EInt . fromInteger
+  instance Add         (E Int) where (+)         = EAdd
+  instance Multiply    (E Int) where (*)         = EMul
+
+  (===) = EEqual
+
+  ------------------------------------------------------------------------------
+  --
+  ------------------------------------------------------------------------------
+
+  eval : E a -> a
+  eval (EInt   x  ) = x
+  eval (EBool  x  ) = x
+  eval (ENot   e  ) = not (eval e)
+  eval (EEqual e d) = eval e == eval d
+  eval (EAdd   e d) = eval e +  eval d
+  eval (EMul   e d) = eval e *  eval d
+
+  ------------------------------------------------------------------------------
+  --
+  ------------------------------------------------------------------------------
+
+  main = do
+    print <| eval <| (5 + 3 : E Int)
+    print <| eval <| 5 === 3
+    print <| eval <| ENot (5 === 3)

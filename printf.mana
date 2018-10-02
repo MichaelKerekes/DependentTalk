@@ -1,0 +1,58 @@
+------------------------------------------------------------------------------
+--
+--  Printf
+--
+------------------------------------------------------------------------------
+
+namespace Printf
+
+  import Core
+
+  ------------------------------------------------------------------------------
+  --  Format
+  ------------------------------------------------------------------------------
+
+  type Format = FNil | FLiteral String Format | FString Format | FInt Format
+
+  formatType : Format -> Type -> Type
+  formatType (FNil        ) t = t
+  formatType (FLiteral s f) t =           formatType f t
+  formatType (FString    f) t = String -> formatType f t
+  formatType (FInt       f) t = Int    -> formatType f t
+
+  parseFormat : List Char -> Format
+  parseFormat (Nil                   ) = FNil
+  parseFormat (Cons '%' (Cons 'd' cs)) = FInt       (parseFormat cs)
+  parseFormat (Cons '%' (Cons 's' cs)) = FString    (parseFormat cs)
+  parseFormat (Cons c cs             ) = pushChar c (parseFormat cs)
+
+  pushChar : Char -> Format -> Format
+  pushChar c (FLiteral string f) = FLiteral (singleton c + string) f
+  pushChar c f                   = FLiteral (pack (Cons c Nil)) f
+
+  ------------------------------------------------------------------------------
+  --  Format string
+  ------------------------------------------------------------------------------
+
+  stringToFormat : String -> Format
+  stringToFormat = parseFormat . unpack
+
+  formatStringToType : String -> Type -> Type
+  formatStringToType s = formatType (stringToFormat s)
+
+  ------------------------------------------------------------------------------
+  --  printf
+  ------------------------------------------------------------------------------
+
+  printf : (s : String) -> formatStringToType s (IO ())
+  printf s = printfImpl (IO ()) printString (stringToFormat s)
+
+  sprintf : (s : String) -> formatStringToType s String
+  sprintf s = printfImpl String id (stringToFormat s)
+
+  printfImpl : (t : Type) -> (String -> t) -> (f : Format) -> formatType f t
+  printfImpl t k (FNil        ) = k ""
+  printfImpl t k (FLiteral s f) =       printfImpl t (k . (s      +)) f
+  printfImpl t k (FString    f) = \s -> printfImpl t (k . (s      +)) f
+  printfImpl t k (FInt       f) = \n -> printfImpl t (k . (show n +)) f
+

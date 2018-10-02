@@ -1,0 +1,70 @@
+------------------------------------------------------------------------------
+--
+--  Integer/Bool Expression
+--
+------------------------------------------------------------------------------
+
+namespace E1
+
+  import Core
+
+  ------------------------------------------------------------------------------
+  --  E - expressions
+  ------------------------------------------------------------------------------
+
+  type E =
+    EInt   Int
+    EBool  Bool
+    ENot   E
+    EEqual E E
+    EAdd   E E
+    EMul   E E
+
+  ------------------------------------------------------------------------------
+  --
+  ------------------------------------------------------------------------------
+
+  instance FromInteger E where fromInteger = EInt . fromInteger
+  instance Add         E where (+)         = EAdd
+  instance Multiply    E where (*)         = EMul
+
+  (===) = EEqual
+
+  ------------------------------------------------------------------------------
+  --
+  ------------------------------------------------------------------------------
+
+  type Value = VInt Int | VBool Bool
+
+  ------------------------------------------------------------------------------
+  --
+  ------------------------------------------------------------------------------
+
+  eval : E -> Maybe Value
+  eval (EInt   x  ) = Some (VInt  x)
+  eval (EBool  x  ) = Some (VBool x)
+  eval (ENot   e  ) = evalBool e \x -> Some (VBool (not x))
+  eval (EEqual e d) = evalInt  e \x -> evalInt d \y -> Some (VBool (x == y))
+  eval (EAdd   e d) = evalInt  e \x -> evalInt d \y -> Some (VInt  (x + y ))
+  eval (EMul   e d) = evalInt  e \x -> evalInt d \y -> Some (VInt  (x * y ))
+
+  evalInt : E -> (Int -> Maybe Value) -> Maybe Value
+  evalInt e f =
+    case eval e of
+      Some (VInt x) -> f x
+      _             -> None
+
+  evalBool : E -> (Bool -> Maybe Value) -> Maybe Value
+  evalBool e f =
+    case eval e of
+      Some (VBool x) -> f x
+      _              -> None
+
+  ------------------------------------------------------------------------------
+  --
+  ------------------------------------------------------------------------------
+
+  main = do
+    print <| eval <| 5 + 3
+    print <| eval <| 5 === 3
+    print <| eval <| ENot (5 === 3)
