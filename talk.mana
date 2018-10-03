@@ -20,8 +20,8 @@
       - probably wont make it through everything
       - ask me anything
 
-
-
+    code:
+      github.com/MichaelKerekes/DependentTalk
 
 
 
@@ -386,7 +386,7 @@
   --  traits
   ------------------------------------------------------------------------------
 
-    -- a set of values/functions a type implements
+    -- a set of values/functions a type may implement
 
     trait Zero t where zero : t
     trait Add  t where (+)  : t -> t -> t
@@ -515,7 +515,7 @@
   ------------------------------------------------------------------------------
 
     add : Int -> (Int -> Int)
-    add = \(x ; Int) -> \(y : Int) -> x + y
+    add = \(x : Int) -> \(y : Int) -> x + y
 
     -- application is substitution
 
